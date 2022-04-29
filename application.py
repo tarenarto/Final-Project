@@ -56,7 +56,7 @@ def login():
     session["userid"]=user["userid"]
     session["logged_in"]=True
 
-    return render_template("Map.html")
+    return render_template("APImap.html")
     
     
 # @app.route("/booksearch", methods=["POST"])
