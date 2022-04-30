@@ -8,7 +8,9 @@
 
     <!-- leaflet css  -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-<!--    <button onclick=" navigator.geolocation.getCurrentPosition(getPosition)" press> -->
+    <!--    <button onclick=" navigator.geolocation.getCurrentPosition(getPosition)" press> -->
+
+    <link href='https://api.mapbox.com/mapbox.js/v3.3.1/mapbox.css' rel='stylesheet' />
 
     <style>
         body {
@@ -24,25 +26,43 @@
 </head>
 
 <body>
-    <button id= "StartTrip"> Start Trip </button><br><br><button id="EndTrip"> End Trip </button>
+    <button id="StartTrip"> Start Trip </button><br><br><button id="EndTrip"> End Trip </button>
     <div id="map"></div>
 </body>
+
 </html>
 <!-- leaflet js  -->
+<script src='https://api.mapbox.com/mapbox.js/v3.3.1/mapbox.js'></script>
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script>
-    // Map initialization
-    var map = L.map('map').setView([-114.04, 51.07], 11);
 
     //osm layer
     var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     });
-    osm.addTo(map);
 
-    if(!navigator.geolocation) {
+    var TrafficCameras = L.tileLayer('https://api.mapbox.com/styles/v1/tarenarto/cl2l1b0h2000c14og29rr3nf2/tiles/{z}/{x}/{y}?access_token=' + "pk.eyJ1IjoidGFyZW5hcnRvIiwiYSI6ImNremw3YzIyNjUzODUyeHA0OXczOTA1azkifQ.LkcKPPxan4rvW-x3zxZVuA", {
+        tileSize: 512,
+        zoomOffset: -1,
+        attribution: '© <a href="https://apps.mapbox.com/feedback/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    });
+
+    var map = L.map('map', {
+        center: [51.0447, -114.0719],
+        zoom: 12,
+        layers: [osm, TrafficCameras]
+    });
+
+    var layers = {
+        "Basemap": osm,
+        "Speed Cameras": TrafficCameras
+    };
+
+    L.control.layers(layers).addTo(map);
+
+    if (!navigator.geolocation) {
         console.log("Your browser doesn't support geolocation feature!")
-    }  else {
+    } else {
         setInterval(() => {
             navigator.geolocation.getCurrentPosition(getPosition)
         }, 5000);
@@ -50,41 +70,61 @@
 
     var marker, circle;
 
-    function getPosition(position){
+    var data = null;
+
+    var xhr = new XMLHttpRequest();
+
+    xhr.addEventListener("readystatechange", function () {
+        if (this.readyState === this.DONE) {
+            console.log(this.responseText);
+        }
+    });
+
+    xhr.open("GET", "https://api.collectapi.com/gasPrice/canada");
+    xhr.setRequestHeader("content-type", "application/json");
+    xhr.setRequestHeader("authorization", "apikey 5vSTEibDBSSPOvf0M6ZlLy:7xYxUxO76d9iWBztiafs0c");
+
+    xhr.send(data);
+
+
+
+
+
+    function getPosition(position) {
         // console.log(position)
         var lat = position.coords.latitude
         var long = position.coords.longitude
         var accuracy = position.coords.accuracy
 
-        if(marker) {
+        if (marker) {
             map.removeLayer(marker)
         }
 
-        if(circle) {
+        if (circle) {
             map.removeLayer(circle)
         }
 
         marker = L.marker([lat, long])
-        circle = L.circle([lat, long], {radius: accuracy})
+        circle = L.circle([lat, long], { radius: accuracy })
 
         var featureGroup = L.featureGroup([marker, circle]).addTo(map)
 
         map.fitBounds(featureGroup.getBounds())
 
-        console.log("Your coordinate is: Lat: "+ lat +" Long: "+ long+ " Accuracy: "+ accuracy)
+        console.log("Your coordinate is: Lat: " + lat + " Long: " + long + " Accuracy: " + accuracy)
         const StartTrip = document.querySelector("#StartTrip");
         const StopTrip = document.querySelector("#StopTrip");
 
         const coordinates = [];
 
         start.addEventListener("click", () => {
-          navigator.geolocation.watchposition(
-            data => {
-              console.log(data);
-              coordinate.push ([data.coords.latitude, data.coords.longitude]);
-            },
-            error => console.log(error),
-          );
+            navigator.geolocation.watchposition(
+                data => {
+                    console.log(data);
+                    coordinate.push([data.coords.latitude, data.coords.longitude]);
+                },
+                error => console.log(error),
+            );
         });
     };
 
